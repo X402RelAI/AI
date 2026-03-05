@@ -21,7 +21,7 @@ Call paid APIs on the [RelAI marketplace](https://relai.fi) using x402 micropaym
 
 - [OpenClaw](https://openclaw.ai) with [lobster.cash](https://www.lobster.cash) plugin (for Solana)
 - `curl` and `jq` installed
-- `RELAI_API_URL` environment variable set
+- `RELAI_API_URL` defaults to `https://api.relai.fi` (override via env var)
 
 ## Installation
 
@@ -33,8 +33,10 @@ Or manually copy the `relai/` directory to `~/.openclaw/skills/`.
 
 ## Configuration
 
+The skill uses `https://api.relai.fi` by default. To override:
+
 ```bash
-export RELAI_API_URL="https://api.relai.fi"
+export RELAI_API_URL="https://your-instance.example.com"
 ```
 
 ## Directory structure

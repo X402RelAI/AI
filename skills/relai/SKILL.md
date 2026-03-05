@@ -2,7 +2,7 @@
 name: relai
 version: 1.1.0
 description: "Browse and call paid APIs on the RelAI marketplace (relai.fi) using x402 micropayments. Supports Solana (via lobster.cash) with EVM support planned. Use when: searching for an API, calling a paid endpoint, or checking pricing. NOT for: free/public APIs."
-metadata: {"openclaw": {"emoji": "🔌", "primaryEnv": "RELAI_API_URL", "requires": {"env": ["RELAI_API_URL"], "bins": ["curl", "jq"]}}}
+metadata: {"openclaw": {"emoji": "🔌", "requires": {"bins": ["curl", "jq"]}}}
 ---
 
 # RelAI — x402 Paid API Client
@@ -16,16 +16,23 @@ Call paid APIs on the RelAI marketplace. Handles API discovery and x402 payment 
 | Solana | Active | lobster.cash | [reference/x402-solana.md](reference/x402-solana.md) |
 | EVM (SKALE, Base...) | Planned | TBD | [reference/x402-evm.md](reference/x402-evm.md) |
 
+## Constants
+
+```
+RELAI_API_URL = https://api.relai.fi
+```
+
+Override: set `RELAI_API_URL` env var to use a different instance.
+
 ## Inputs needed
 
-- `RELAI_API_URL` environment variable (e.g. `https://api.relai.fi`)
 - A configured wallet with USDC balance on the target network
 
 ## Workflow
 
 ### Step 0 — Validate prerequisites
 
-1) Verify `RELAI_API_URL` is set. If not, stop and inform the user.
+1) Set `RELAI_API_URL` to `https://api.relai.fi` unless the env var is already set (user override).
 2) Verify a wallet is configured for the target network. Currently only lobster.cash (Solana) is supported.
 
 ### Step 1 — Discover APIs
@@ -91,7 +98,7 @@ From the API details, determine the payment network:
 
 | Situation | Action |
 |---|---|
-| `RELAI_API_URL` not set | Stop, tell user to configure it |
+| `RELAI_API_URL` override invalid | Warn and fall back to default |
 | Wallet not configured | Stop, ask user to set up wallet for that network |
 | Insufficient balance | Show required amount, stop |
 | `zAuthEnabled: true` | Inform user, skip this API |
