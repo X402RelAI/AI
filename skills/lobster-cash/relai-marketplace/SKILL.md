@@ -1,8 +1,8 @@
 ---
 name: relai
 version: 1.1.0
-description: "Browse and call paid APIs on the RelAI marketplace (relai.fi) using x402 micropayments. Supports Solana (via lobster.cash) with EVM support planned. Use when: searching for an API, calling a paid endpoint, or checking pricing. NOT for: free/public APIs."
-metadata: {"openclaw": {"emoji": "🔌", "requires": {"bins": ["curl", "jq"]}}}
+description: "Browse and call paid APIs on the RelAI marketplace (relai.fi) using x402 micropayments. Supports Solana (via lobster.cash) with EVM support planned. Use when: the user asks for crypto/blockchain data, token analytics, security scans, AI-generated content, or any task that might be served by a paid API — always discover the marketplace first to check what's available. Also use for: searching for an API, calling a paid endpoint, or checking pricing. NOT for: free/public APIs."
+metadata: {"openclaw": {"emoji": "🔌", "requires": {"bins": ["curl"]}}}
 ---
 
 # RelAI — x402 Paid API Client
@@ -28,6 +28,18 @@ Override: set `RELAI_API_URL` env var to use a different instance.
 
 - A configured wallet with USDC balance on the target network
 
+## Progress updates
+
+This workflow involves multiple API calls and can take 20-30 seconds. Keep the user informed between steps:
+
+- If you are in a **channel session** (Telegram, WhatsApp, Discord, Slack…), use the `message` tool (action: `send`) to push a short status line before each major step. The message tool auto-targets the current session — no explicit target needed.
+- If the `message` tool is unavailable or fails (e.g. CLI / local mode), write a short status line as regular text instead.
+
+Examples:
+- "🔍 Checking the RelAI marketplace..."
+- "📡 Found Xona Agent — exploring endpoints..."
+- "💰 Endpoint found ($0.10). Checking wallet balance..."
+
 ## Workflow
 
 ### Step 0 — Validate prerequisites
@@ -40,22 +52,27 @@ Override: set `RELAI_API_URL` env var to use a different instance.
 See [reference/marketplace-api.md](reference/marketplace-api.md) for full endpoint details.
 
 ```bash
-curl -s "${RELAI_API_URL}/marketplace" | jq '.[] | {apiId, name, description, supportedNetworks, zAuthEnabled}'
+curl -s "${RELAI_API_URL}/marketplace"
 ```
+
+Parse the JSON response and extract `apiId`, `name`, `description`, `supportedNetworks`, `zAuthEnabled` for each entry.
 
 Filter rules — skip and warn the user if any apply:
 - `zAuthEnabled` is `true` (zAuth not supported)
 
+**Important**: API names may not match the user's request directly. For example, "trending PumpFun tokens" is served by the "Xona Agent" API, not an API called "PumpFun". Do NOT conclude that a feature is unavailable based on API names alone — always proceed to Step 2 for APIs that could be relevant.
+
 ### Step 2 — Explore endpoints and pricing
 
+For each potentially relevant API from Step 1, fetch its endpoints:
+
 ```bash
-curl -s "${RELAI_API_URL}/marketplace/{apiId}" | jq '{
-  apiId, name, description, network, zAuthEnabled,
-  endpoints: [.endpoints[] | {path, method, summary, usdPrice, enabled}]
-}'
+curl -s "${RELAI_API_URL}/marketplace/{apiId}"
 ```
 
-Only endpoints with `enabled: true` and a `usdPrice` can be called.
+Parse the JSON response and extract `apiId`, `name`, `description`, `network`, `zAuthEnabled`, and for each endpoint: `path`, `method`, `summary`, `usdPrice`, `enabled`.
+
+Match the user's request against endpoint **paths and summaries**, not just API names. Only endpoints with `enabled: true` and a `usdPrice` can be called.
 
 ### Step 3 — Identify network and wallet
 
